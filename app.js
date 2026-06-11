@@ -428,13 +428,51 @@ function renderBookings(){
 }
 
 // ─── SAVE / EDIT BOOKING ──────────────────────────────
-function saveBooking(){
-  const ci=getVal('f-ci'),co=getVal('f-co'),bid=getVal('f-bid');
-  if(!ci||!co||!bid){ showFS('Cần Check-in, Check-out và Booking ID','err'); return; }
-  const bk={id:bid,checkin:ci,checkout:co,guest:getVal('f-guest')||'Guest',nation:getVal('f-nat')||'Unknown',pax:Number(getVal('f-pax'))||1,room:getVal('f-room')||'—',roomType:getVal('f-rt'),source:getVal('f-src'),roomPrice:Number(getVal('f-rp'))||0,fnb:Number(getVal('f-fnb'))||0,service:Number(getVal('f-svc'))||0,paid:getVal('f-paid'),remains:Number(getVal('f-rem'))||0,notes:getVal('f-note')};
+async function saveBooking(){
+  const ci=getVal('f-ci'), co=getVal('f-co'), bid=getVal('f-bid');
+
+  if(!ci || !co || !bid){
+    showFS('Cần Check-in, Check-out và Booking ID','err');
+    return;
+  }
+
+  const bk = {
+    id: bid,
+    checkin: ci,
+    checkout: co,
+    guest: getVal('f-guest') || 'Guest',
+    nation: getVal('f-nat') || 'Unknown',
+    pax: Number(getVal('f-pax')) || 1,
+    room: getVal('f-room') || '—',
+    roomType: getVal('f-rt'),
+    source: getVal('f-src'),
+    roomPrice: Number(getVal('f-rp')) || 0,
+    fnb: Number(getVal('f-fnb')) || 0,
+    service: Number(getVal('f-svc')) || 0,
+    paid: getVal('f-paid'),
+    remains: Number(getVal('f-rem')) || 0,
+    notes: getVal('f-note')
+  };
+
+  if(fbDB){
+    try{
+      await saveBookingToFirebase(bk);
+      cancelEdit();
+      toast('Booking đã lưu lên Firebase ✓');
+      setTimeout(()=>navTo('bookings',null),400);
+      return;
+    } catch(e){
+      showFS('Không lưu được lên Firebase: ' + e.message, 'err');
+      return;
+    }
+  }
+
   bookings.push(bk);
-  save('ct_bookings',bookings); initCmp(); renderAll();
-  cancelEdit(); toast('Booking đã lưu ✓');
+  save('ct_bookings', bookings);
+  initCmp();
+  renderAll();
+  cancelEdit();
+  toast('Booking đã lưu local ✓');
   setTimeout(()=>navTo('bookings',null),400);
 }
 function cancelEdit(){ editingBkIdx=null; ['f-ci','f-co','f-bid','f-guest','f-nat','f-pax','f-room','f-rp','f-fnb','f-svc','f-rem','f-note'].forEach(id=>setVal(id,'')); showFS('',''); document.getElementById('form-mode-title').textContent='New Reservation'; document.getElementById('save-btn-label').textContent='Save reservation'; }
