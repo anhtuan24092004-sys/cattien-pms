@@ -22,10 +22,37 @@
 <script>
 // Firebase modules (lazy — only loads if user configures it)
 window._firebaseModules = null;
-async function loadFirebase(cfg){
-  const {initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const {getFirestore,collection,onSnapshot,addDoc,deleteDoc,doc,setDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  window._firebaseModules = {initializeApp,getFirestore,collection,onSnapshot,addDoc,deleteDoc,doc,setDoc,serverTimestamp};
+
+async function loadFirebase(){
+  if (window._firebaseModules) return window._firebaseModules;
+
+  const { initializeApp, getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+
+  const {
+    getFirestore,
+    collection,
+    onSnapshot,
+    addDoc,
+    deleteDoc,
+    doc,
+    setDoc,
+    serverTimestamp
+  } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+  window._firebaseModules = {
+    initializeApp,
+    getApp,
+    getFirestore,
+    collection,
+    onSnapshot,
+    addDoc,
+    deleteDoc,
+    doc,
+    setDoc,
+    serverTimestamp
+  };
+
+  return window._firebaseModules;
 }
 </script>
 <style>
