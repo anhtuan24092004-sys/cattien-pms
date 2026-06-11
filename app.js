@@ -153,10 +153,41 @@ function toast(msg,type='success'){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3200);
 }
-function setSyncStatus(s,m){
-  const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label');
-  d.className='sync-dot '+(s==='live'?'live':s==='loading'?'loading':s==='error'?'error':'');
-  l.textContent=m;
+function firebaseDocId(b){
+  return String(b._fid || b.id || ('BK-' + Date.now())).replace(/\//g, '-');
+}
+
+function cleanBookingForFirebase(b){
+  const data = {...b};
+  delete data._fid;
+  data.roomPrice = Number(data.roomPrice) || 0;
+  data.fnb = Number(data.fnb) || 0;
+  data.service = Number(data.service) || 0;
+  data.remains = Number(data.remains) || 0;
+  data.pax = Number(data.pax) || 1;
+  data.updatedAt = new Date().toISOString();
+  return data;
+}
+
+async function saveBookingToFirebase(b){
+  const {doc, setDoc} = window._firebaseModules || {};
+  if(!fbDB || !doc || !setDoc) return false;
+
+  await setDoc(
+    doc(fbDB, 'bookings', firebaseDocId(b)),
+    cleanBookingForFirebase(b),
+    {merge:true}
+  );
+
+  return true;
+}
+
+async function deleteBookingFromFirebase(b){
+  const {doc, deleteDoc} = window._firebaseModules || {};
+  if(!fbDB || !doc || !deleteDoc) return false;
+
+  await deleteDoc(doc(fbDB, 'bookings', firebaseDocId(b)));
+  return true;
 }
 
 // ─── THEME ────────────────────────────────────────────
