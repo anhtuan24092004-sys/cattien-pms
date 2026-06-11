@@ -23,10 +23,10 @@
 // Firebase modules (lazy — only loads if user configures it)
 window._firebaseModules = null;
 
-async function loadFirebase(){
+window.loadFirebase = async function loadFirebase(){
   if (window._firebaseModules) return window._firebaseModules;
 
-  const { initializeApp, getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
 
   const {
     getFirestore,
@@ -41,7 +41,6 @@ async function loadFirebase(){
 
   window._firebaseModules = {
     initializeApp,
-    getApp,
     getFirestore,
     collection,
     onSnapshot,
@@ -53,7 +52,12 @@ async function loadFirebase(){
   };
 
   return window._firebaseModules;
-}
+};
+
+// Tự động tải Firebase SDK ngay khi app mở
+window.loadFirebase().catch(function(err){
+  console.error('Firebase SDK load error:', err);
+});
 </script>
 <style>
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
