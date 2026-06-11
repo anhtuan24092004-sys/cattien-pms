@@ -1,0 +1,21 @@
+{
+  "name": "Cat Tien Jungle Lodge — PMS",
+  "short_name": "CT Lodge",
+  "description": "Property Management System — Cat Tien Jungle Lodge",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "background_color": "#1e4d2b",
+  "theme_color": "#1e4d2b",
+  "lang": "vi",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Room Plan", "url": "./index.html#roomplan", "description": "Live occupancy" },
+    { "name": "New Booking", "url": "./index.html#new-booking", "description": "Add reservation" },
+    { "name": "Dashboard", "url": "./index.html#dashboard", "description": "Revenue KPIs" },
+    { "name": "Email Alerts", "url": "./index.html#email", "description": "Daily digest" }
+  ]
+}
