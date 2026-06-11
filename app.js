@@ -87,8 +87,16 @@ function loadAll(){
   adminPwd      = load('ct_admin_pwd','admin123');
   emailSettings = load('ct_email_settings', emailSettings);
   emailLog      = load('ct_email_log', []);
-  const url = load('ct_sheets_url','');
-  if(url){ sheetsUrl=url; setVal('gs-url',url); }
+  const fbCfg = load('ct_fb_config','');
+if(fbCfg){
+  setVal('fb-config', fbCfg);
+
+  setTimeout(() => {
+    if(typeof connectFirebase === 'function'){
+      connectFirebase();
+    }
+  }, 1000);
+}
   const hi = load('ct_hotel_info',null);
   if(hi){
     setVal('a-hotel-name', hi.name||'Cat Tien Jungle Lodge');
