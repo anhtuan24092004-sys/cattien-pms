@@ -745,26 +745,87 @@ function openAddRT(){
 
 // ─── FIREBASE / SHEETS ────────────────────────────────
 async function connectFirebase(){
-  const raw=getVal('fb-config').trim();
-  if(!raw){document.getElementById('fb-status').innerHTML='<span style="color:var(--warn)">Paste Firebase config JSON.</span>';return;}
+  const raw = getVal('fb-config').trim();
+
+  if(!raw){
+    document.getElementById('fb-status').innerHTML = '<span style="color:var(--warn)">Paste Firebase config JSON.</span>';
+    return;
+  }
+
   try{
-    const cfg=JSON.parse(raw);
+    let cleaned = raw.trim();
+
+    cleaned = cleaned
+      .replace(/^const\s+firebaseConfig\s*=\s*/,'')
+      .replace(/;+\s*$/,'');
+
+    let cfg;
+
+    try {
+      cfg = JSON.parse(cleaned);
+    } catch {
+      cfg = Function('"use strict"; return (' + cleaned + ')')();
+    }
+
     if(!cfg.projectId) throw new Error('projectId missing');
-    const {initializeApp,getFirestore,collection,onSnapshot}=window._firebaseModules||{};
+
+    if (!window._firebaseModules && typeof loadFirebase === 'function') {
+      await loadFirebase();
+    }
+
+    const {
+      initializeApp,
+      getApp,
+      getFirestore,
+      collection,
+      onSnapshot
+    } = window._firebaseModules || {};
+
     if(!initializeApp) throw new Error('Firebase SDK not loaded');
-    const app=initializeApp(cfg,'ct-pms');
-    fbDB=getFirestore(app);
+
+    let app;
+
+    try {
+      app = getApp('ct-pms');
+    } catch {
+      app = initializeApp(cfg, 'ct-pms');
+    }
+
+    fbDB = getFirestore(app);
+
     if(fbUnsub) fbUnsub();
-    fbUnsub=onSnapshot(collection(fbDB,'bookings'),snap=>{
-      bookings=snap.docs.map(d=>({...d.data(),_fid:d.id})).map(b=>({...b,roomPrice:Number(b.roomPrice)||0,fnb:Number(b.fnb)||0,service:Number(b.service)||0,remains:Number(b.remains)||0,pax:Number(b.pax)||1}));
-      initCmp(); renderAll();
-      setSyncStatus('live','Firebase · '+new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}));
+
+    fbUnsub = onSnapshot(collection(fbDB,'bookings'), snap => {
+      bookings = snap.docs
+        .map(d => ({...d.data(), _fid:d.id}))
+        .map(b => ({
+          ...b,
+          roomPrice:Number(b.roomPrice)||0,
+          fnb:Number(b.fnb)||0,
+          service:Number(b.service)||0,
+          remains:Number(b.remains)||0,
+          pax:Number(b.pax)||1
+        }));
+
+      initCmp();
+      renderAll();
+
+      setSyncStatus(
+        'live',
+        'Firebase · ' + new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})
+      );
     });
-    save('ct_fb_config',raw);
-    document.getElementById('fb-status').innerHTML='<span style="color:var(--g2)">✓ Connected — realtime ⚡</span>';
+
+    save('ct_fb_config', raw);
+
+    document.getElementById('fb-status').innerHTML = '<span style="color:var(--g2)">✓ Connected — realtime ⚡</span>';
     setSyncStatus('live','Firebase Live');
     toast('Firebase đã kết nối ⚡');
-  } catch(e){ setSyncStatus('error','Error'); document.getElementById('fb-status').innerHTML=`<span style="color:var(--warn)">✕ ${e.message}</span>`; }
+
+  } catch(e){
+    setSyncStatus('error','Error');
+    document.getElementById('fb-status').innerHTML = `<span style="color:var(--warn)">✕ ${e.message}</span>`;
+  }
 }
 function disconnectFB(){ if(fbUnsub){fbUnsub();fbUnsub=null;} fbDB=null; setSyncStatus('off','Demo mode'); document.getElementById('fb-status').textContent='Đã ngắt Firebase.'; }
 async function syncNow(){
