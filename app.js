@@ -489,15 +489,74 @@ function openEdit(idx){
   document.getElementById('edit-status').textContent='';
   document.getElementById('edit-modal').style.display='flex';
 }
-function updateBooking(){
-  if(editingBkIdx===null) return;
-  const b=bookings[editingBkIdx];
-  bookings[editingBkIdx]={...b,checkin:getVal('e-ci'),checkout:getVal('e-co'),guest:getVal('e-guest'),nation:getVal('e-nat'),pax:Number(getVal('e-pax'))||1,room:getVal('e-room')||b.room,roomType:getVal('e-rt')||b.roomType,source:getVal('e-src'),roomPrice:Number(getVal('e-rp'))||0,fnb:Number(getVal('e-fnb'))||0,service:Number(getVal('e-svc'))||0,paid:getVal('e-paid'),remains:Number(getVal('e-rem'))||0,notes:getVal('e-note')};
-  save('ct_bookings',bookings); initCmp(); renderAll();
-  closeEditModal(); toast('Booking đã cập nhật ✓');
+async function updateBooking(){
+  if(editingBkIdx === null) return;
+
+  const oldBooking = bookings[editingBkIdx];
+
+  const updatedBooking = {
+    ...oldBooking,
+    checkin: getVal('e-ci'),
+    checkout: getVal('e-co'),
+    id: getVal('e-bid') || oldBooking.id,
+    guest: getVal('e-guest'),
+    nation: getVal('e-nat'),
+    pax: Number(getVal('e-pax')) || 1,
+    room: getVal('e-room') || oldBooking.room,
+    roomType: getVal('e-rt') || oldBooking.roomType,
+    source: getVal('e-src'),
+    roomPrice: Number(getVal('e-rp')) || 0,
+    fnb: Number(getVal('e-fnb')) || 0,
+    service: Number(getVal('e-svc')) || 0,
+    paid: getVal('e-paid'),
+    remains: Number(getVal('e-rem')) || 0,
+    notes: getVal('e-note')
+  };
+
+  if(fbDB){
+    try{
+      await saveBookingToFirebase(updatedBooking);
+      closeEditModal();
+      toast('Booking đã cập nhật lên Firebase ✓');
+      return;
+    } catch(e){
+      document.getElementById('edit-status').textContent = 'Không cập nhật được Firebase: ' + e.message;
+      document.getElementById('edit-status').style.color = 'var(--warn)';
+      return;
+    }
+  }
+
+  bookings[editingBkIdx] = updatedBooking;
+  save('ct_bookings', bookings);
+  initCmp();
+  renderAll();
+  closeEditModal();
+  toast('Booking đã cập nhật local ✓');
 }
 function closeEditModal(){ document.getElementById('edit-modal').style.display='none'; editingBkIdx=null; }
-function delBooking(i){ if(!confirm('Xóa booking '+bookings[i].id+'?'))return; bookings.splice(i,1); save('ct_bookings',bookings); initCmp(); renderAll(); toast('Đã xóa','info'); }
+async function delBooking(i){
+  const b = bookings[i];
+  if(!b) return;
+
+  if(!confirm('Xóa booking ' + b.id + '?')) return;
+
+  if(fbDB){
+    try{
+      await deleteBookingFromFirebase(b);
+      toast('Đã xóa trên Firebase','info');
+      return;
+    } catch(e){
+      toast('Không xóa được trên Firebase: ' + e.message, 'error');
+      return;
+    }
+  }
+
+  bookings.splice(i,1);
+  save('ct_bookings', bookings);
+  initCmp();
+  renderAll();
+  toast('Đã xóa local','info');
+}
 
 // ─── ROOM TYPE ANALYSIS ───────────────────────────────
 function renderRoomType(){
